@@ -8,6 +8,9 @@ import optuna
 from utils.train import (
     seed_all,
     set_model,
+    resolve_device,
+    describe_runtime,
+    create_grad_scaler,
     get_calculated_means_stds_trainval, 
     get_patch_lists, 
     get_loaders, 
@@ -28,16 +31,20 @@ def retrain_best_trial(args):
         db_name = args.db_name
     print(f"loaded db {db_name}")
     # Parameters
-    max_epochs = 100
-    es_patience = 5
-    loss_total = 1
+    max_epochs = args.max_epochs
+    es_patience = args.early_stop_patience
+    loss_total = math.inf
     epochs_no_improve = 0
     # NEED TO CHANGE THIS LINE OF CODE TO RE-TRAIN DIFFERENT MODELS
     study_storage = f"sqlite:///{root_path}/results/studies/{architecture}/save_{architecture}_{encoder_name}_dil0_bilin1_pre1.db"
     studies = optuna.study.get_all_study_summaries(storage=study_storage)
     loaded_study = optuna.load_study(study_name=studies[0].study_name, storage=study_storage)
     trial = loaded_study.best_trial
-    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    device: str = resolve_device(args.device)
+    use_amp: bool = args.amp
+    num_workers: int = args.num_workers
+    pin_memory: bool = args.pin_memory if args.pin_memory is not None else device == "cuda"
+    describe_runtime(device)
     print(f"Loading Study: {studies[0].study_name} from {db_name}")
     print(f"Best Trial:{trial.number}")
     print(trial)
@@ -50,7 +57,7 @@ def retrain_best_trial(args):
     # extract hyperparameters, feature extractor and architecture from best trial
     lr = trial.params["lr"]
     lr_factor = trial.params["lr_factor"]
-    batch_size=trial.user_attrs["batch_size"]
+    batch_size=args.batch_size
     lr_scheduler_patience = trial.user_attrs["lr_scheduler_patience"]
     architecture = trial.user_attrs["architecture"]
     encoder_name = trial.user_attrs["encoder_name"]
@@ -84,11 +91,11 @@ def retrain_best_trial(args):
             mean = means,
             std = stds,
             batch_size = batch_size,
-            num_workers = 4,
-            pin_memory = True,
+            num_workers = num_workers,
+            pin_memory = pin_memory,
         )
 
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = create_grad_scaler(device=device, use_amp=use_amp)
     for epoch in range(max_epochs):
         train_loss = train_epoch(
             train_loader, 
@@ -96,7 +103,9 @@ def retrain_best_trial(args):
             optimizer, 
             loss_fn, 
             scaler, 
-            cur_epoch=epoch
+            cur_epoch=epoch,
+            device=device,
+            use_amp=use_amp,
             )
         checkpoint = {
             "state_dict": model.state_dict(),
@@ -115,6 +124,8 @@ def retrain_best_trial(args):
             print(f"Early Stopping on epoch {epoch}")
             break
         print(f"Loss on Train set: {train_loss}")
+    if device == "cuda":
+        torch.cuda.empty_cache()
     return train_loss
 
 

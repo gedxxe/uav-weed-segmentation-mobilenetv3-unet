@@ -1,0 +1,151 @@
+digraph fig4_robustness_protocol {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad=0.25,
+    nodesep=0.45,
+    ranksep=0.65,
+    fontname="Arial",
+    fontsize=14,
+    labelloc="t",
+    label="Figure 4. Proposed Robustness Evaluation Protocol"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#2F3A45",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontname="Arial",
+    fontsize=10.5,
+    margin="0.08,0.06"
+  ];
+
+  edge [
+    color="#2F3A45",
+    penwidth=1.25,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=9.5
+  ];
+
+  protocol_note [
+    shape=note,
+    label="Status: proposed protocol, not implemented as a perturbation suite in the current repository.\nExisting code supports clean/test subsets, test_different_bbch subset evaluation, and saved-prediction metrics.",
+    fillcolor="#FFFFFF",
+    color="#707B86"
+  ];
+
+  subgraph cluster_inputs {
+    label="Evaluation Inputs";
+    color="#8BA6B8";
+    penwidth=1.2;
+    style="rounded";
+
+    clean_input [
+      label="Clean Test Image Patches\nnormalized RGB patches"
+      fillcolor="#EAF2F8"
+    ];
+    gt_masks [
+      label="Ground-Truth Masks\nBackground, Sorghum, Weed"
+      fillcolor="#EAF2F8"
+    ];
+  }
+
+  subgraph cluster_perturbations {
+    label="Proposed Perturbation Set";
+    color="#A8A0C8";
+    penwidth=1.2;
+    style="rounded";
+
+    noise [
+      label="Gaussian Noise\nproposed"
+      fillcolor="#F2F0FA"
+    ];
+    blur [
+      label="Blur / Motion Blur\nproposed"
+      fillcolor="#F2F0FA"
+    ];
+    contrast [
+      label="Low Contrast\nproposed"
+      fillcolor="#F2F0FA"
+    ];
+    illumination [
+      label="Brightness / Illumination Shift\nproposed"
+      fillcolor="#F2F0FA"
+    ];
+    occlusion [
+      label="Synthetic Occlusion\nproposed"
+      fillcolor="#F2F0FA"
+    ];
+    domain_shift [
+      label="Dataset-Level Shift\ntest_different_bbch available;\nrobustness claim to verify"
+      fillcolor="#F2F0FA"
+    ];
+  }
+
+  subgraph cluster_model {
+    label="Shared Trained Model";
+    color="#8FAE93";
+    penwidth=1.2;
+    style="rounded";
+
+    model [
+      label="Same Frozen Checkpoint\nunet_mobilenetv3 + mobilenetv3_large"
+      fillcolor="#EEF7EF"
+    ];
+  }
+
+  subgraph cluster_outputs {
+    label="Predictions and Metric Comparison";
+    color="#C9A36A";
+    penwidth=1.2;
+    style="rounded";
+
+    clean_pred [
+      label="Clean Prediction"
+      fillcolor="#FFF7E8"
+    ];
+    perturbed_pred [
+      label="Perturbed Predictions"
+      fillcolor="#FFF7E8"
+    ];
+    metrics [
+      label="Compare Metrics\nmIoU, Dice, Precision,\nRecall, F1-score, Pixel Accuracy\nper perturbation and severity"
+      fillcolor="#FFF7E8"
+    ];
+    robustness_table [
+      label="Robustness Summary\nmetric drop vs clean baseline"
+      fillcolor="#FFF7E8"
+    ];
+  }
+
+  protocol_note -> clean_input [
+    style=dotted,
+    arrowhead=none
+  ];
+
+  clean_input -> model;
+  model -> clean_pred;
+
+  clean_input -> noise [style=dotted];
+  clean_input -> blur [style=dotted];
+  clean_input -> contrast [style=dotted];
+  clean_input -> illumination [style=dotted];
+  clean_input -> occlusion [style=dotted];
+  clean_input -> domain_shift [style=dotted];
+
+  noise -> model [style=dotted];
+  blur -> model [style=dotted];
+  contrast -> model [style=dotted];
+  illumination -> model [style=dotted];
+  occlusion -> model [style=dotted];
+  domain_shift -> model [style=dotted];
+
+  model -> perturbed_pred [style=dotted];
+  clean_pred -> metrics;
+  perturbed_pred -> metrics [style=dotted];
+  gt_masks -> metrics [style=dotted, label="reference labels"];
+  metrics -> robustness_table;
+}

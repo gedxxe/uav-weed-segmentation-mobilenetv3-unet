@@ -1,0 +1,171 @@
+digraph fig2_model_architecture {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad=0.25,
+    nodesep=0.42,
+    ranksep=0.70,
+    fontname="Arial",
+    fontsize=14,
+    labelloc="t",
+    label="Figure 2. Proposed Hybrid U-Net-MobileNetV3 Architecture"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#2F3A45",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontname="Arial",
+    fontsize=10.5,
+    margin="0.08,0.06"
+  ];
+
+  edge [
+    color="#2F3A45",
+    penwidth=1.25,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=9.5
+  ];
+
+  input [
+    label="Input Patch\nRGB tensor [B, 3, H, W]\nrepo patches usually 256x256"
+    fillcolor="#FFFFFF"
+  ];
+
+  subgraph cluster_encoder {
+    label="MobileNetV3-Large Encoder";
+    color="#8BA6B8";
+    penwidth=1.2;
+    style="rounded";
+
+    hr_stem [
+      label="High-Resolution Stem Skip\n3x3 conv + BN + H-swish\nC=16, HxW"
+      fillcolor="#EAF2F8"
+    ];
+    enc1 [
+      label="Feature Index 1\nC=16, H/2 x W/2"
+      fillcolor="#EAF2F8"
+    ];
+    enc2 [
+      label="Feature Index 3\nC=24, H/4 x W/4"
+      fillcolor="#EAF2F8"
+    ];
+    enc3 [
+      label="Feature Index 6\nC=40, H/8 x W/8"
+      fillcolor="#EAF2F8"
+    ];
+    enc4 [
+      label="Feature Index 12\nC=112, H/16 x W/16"
+      fillcolor="#EAF2F8"
+    ];
+  }
+
+  subgraph cluster_bottleneck {
+    label="Bottleneck";
+    color="#A8A0C8";
+    penwidth=1.2;
+    style="rounded";
+
+    bottleneck [
+      label="Feature Index 15\nC=160, H/32 x W/32"
+      fillcolor="#F2F0FA"
+    ];
+  }
+
+  subgraph cluster_decoder {
+    label="U-Net-Style Decoder";
+    color="#8FAE93";
+    penwidth=1.2;
+    style="rounded";
+
+    dec4 [
+      label="Decoder Block 1\nUpsample + concat skip\nSE/H-swish refinement\nC=160, H/16 x W/16"
+      fillcolor="#EEF7EF"
+    ];
+    dec3 [
+      label="Decoder Block 2\nUpsample + concat skip\nSE/H-swish refinement\nC=112, H/8 x W/8"
+      fillcolor="#EEF7EF"
+    ];
+    dec2 [
+      label="Decoder Block 3\nUpsample + concat skip\nSE/H-swish refinement\nC=64, H/4 x W/4"
+      fillcolor="#EEF7EF"
+    ];
+    dec1 [
+      label="Decoder Block 4\nUpsample + concat skip\nSE/H-swish refinement\nC=32, H/2 x W/2"
+      fillcolor="#EEF7EF"
+    ];
+    dec0 [
+      label="Decoder Block 5\nUpsample + concat high-res skip\nSE/H-swish refinement\nC=16, HxW"
+      fillcolor="#EEF7EF"
+    ];
+  }
+
+  subgraph cluster_output {
+    label="Segmentation Head";
+    color="#C9A36A";
+    penwidth=1.2;
+    style="rounded";
+
+    head [
+      label="Dropout(0.1) + 3x3 Conv\n3 output channels"
+      fillcolor="#FFF7E8"
+    ];
+    output [
+      label="Output Logits\n[B, 3, H, W]\nclasses: Background, Sorghum, Weed"
+      fillcolor="#FFF7E8"
+    ];
+  }
+
+  input -> enc1;
+  enc1 -> enc2;
+  enc2 -> enc3;
+  enc3 -> enc4;
+  enc4 -> bottleneck;
+  bottleneck -> dec4;
+  dec4 -> dec3;
+  dec3 -> dec2;
+  dec2 -> dec1;
+  dec1 -> dec0;
+  dec0 -> head;
+  head -> output;
+
+  input -> hr_stem [
+    label="parallel detail path"
+  ];
+
+  enc4 -> dec4 [
+    style=dashed,
+    label="PPM skip"
+  ];
+  enc3 -> dec3 [
+    style=dashed,
+    label="PPM skip"
+  ];
+  enc2 -> dec2 [
+    style=dashed,
+    label="PPM skip"
+  ];
+  enc1 -> dec1 [
+    style=dashed,
+    label="PPM skip"
+  ];
+  hr_stem -> dec0 [
+    style=dashed,
+    label="PPM skip"
+  ];
+
+  note [
+    shape=note,
+    label="To verify for publication wording:\nexact MobileNetV3 block names depend on the installed torchvision feature layout.\nThe code exposes feature indices, not paper-stage names.",
+    fillcolor="#FFFFFF",
+    color="#707B86",
+    fontsize=9
+  ];
+  bottleneck -> note [
+    style=dotted,
+    arrowhead=none
+  ];
+}

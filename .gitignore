@@ -11,8 +11,10 @@ data/test_different_bbch/patches
 todo.md
 models/*
 check_*
+!scripts/check_dataset.py
 db*
 save_*
+results/*.db
 results/blurIndicators
 results/predictions/test_different_bbch/difference/*
 results/predictions/test/difference/*
@@ -154,3 +156,11 @@ train_script_unet.sh
 train_script_fcn_dilation.sh
 train_script_unet.sh
 results/retrain_unet_resnet34.db
+
+# Edge export model binaries. Keep export manifests/reports/README visible.
+exports/ncnn/**/*.pt
+exports/ncnn/**/*.onnx
+exports/ncnn/**/*.param
+exports/ncnn/**/*.bin
+exports/ncnn/**/model_pnnx.py
+exports/ncnn/**/model_ncnn.py

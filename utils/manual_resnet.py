@@ -2,6 +2,8 @@
 # Thus is easier for re-implementation and changes
 import torch
 import torch.nn as nn
+import os
+from pathlib import Path
 from collections import OrderedDict
 from torchvision._internally_replaced_utils import load_state_dict_from_url
 
@@ -12,6 +14,13 @@ model_urls = {
     'resnet101': 'https://download.pytorch.org/models/resnet101-63fe2227.pth',
     'resnet152': 'https://download.pytorch.org/models/resnet152-394f9c45.pth',
     }
+
+
+def get_torch_checkpoint_dir():
+    torch_home = Path(os.environ.get("TORCH_HOME", Path.cwd() / ".cache" / "torch"))
+    checkpoint_dir = torch_home / "hub" / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    return checkpoint_dir
 
 def replace_strides_with_dilation(module, dilation_rate):
     """Patch Conv2d modules replacing strides with dilation"""
@@ -604,6 +613,7 @@ def load_resnet(encoder_name, num_classes, pretrained, replace_stride_with_dilat
         print("LOADING PRETRAINED MODEL WEIGHTS FROM IMAGENET")
         # get the state dict from URL
         state_dict = load_state_dict_from_url(model_urls[encoder_name],
+                                              model_dir=str(get_torch_checkpoint_dir()),
                                               progress=progress)
         # we need to remove the keys for the fully connected layer, as we only need the feature extractor
         entries_to_remove = ('fc.weight', 'fc.bias')
@@ -612,16 +622,23 @@ def load_resnet(encoder_name, num_classes, pretrained, replace_stride_with_dilat
         # actually loading the weights to the model    
         model.load_state_dict(state_dict) 
     else:
-        print("TRAINING WITH RANDOM INITIALIZED WEIGHTS")
+        print("INITIALIZING RESNET BACKBONE WITHOUT IMAGENET PRETRAINED WEIGHTS")
     return model
 
 
 def test():
-    x = torch.randn(20, 3, 256, 256).to("cuda")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x = torch.randn(2, 3, 256, 256, device=device)
     for encoder_name in ["resnet34"]:
         for output_stride in [True, False]:
-            model = load_resnet(encoder_name=encoder_name, num_classes=3, pretrained=True, replace_stride_with_dilation=output_stride).to("cuda")
+            model = load_resnet(
+                encoder_name=encoder_name,
+                num_classes=3,
+                pretrained=False,
+                replace_stride_with_dilation=output_stride,
+            ).to(device)
             rn18_preds = model(x)["layer4"]
+            print(encoder_name, output_stride, tuple(rn18_preds.shape))
 
 if __name__ == "__main__":
     test()

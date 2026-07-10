@@ -1,0 +1,140 @@
+digraph fig3_feature_fusion {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad=0.25,
+    nodesep=0.45,
+    ranksep=0.62,
+    fontname="Arial",
+    fontsize=14,
+    labelloc="t",
+    label="Figure 3. Feature Fusion Mechanism"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#2F3A45",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontname="Arial",
+    fontsize=10.5,
+    margin="0.08,0.06"
+  ];
+
+  edge [
+    color="#2F3A45",
+    penwidth=1.25,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=9.5
+  ];
+
+  subgraph cluster_encoder_skip {
+    label="Encoder Skip Feature";
+    color="#8BA6B8";
+    penwidth=1.2;
+    style="rounded";
+
+    skip_in [
+      label="Shallow/Intermediate Encoder Feature\nC_s x h x w"
+      fillcolor="#EAF2F8"
+    ];
+  }
+
+  subgraph cluster_ppm {
+    label="PPM Skip/Context Module";
+    color="#A8A0C8";
+    penwidth=1.2;
+    style="rounded";
+
+    ppm_pool [
+      label="Adaptive Avg Pooling\nbins: 1, 2, 3, 6"
+      fillcolor="#F2F0FA"
+    ];
+    ppm_proj [
+      label="1x1 Conv + H-swish\nper pooled branch"
+      fillcolor="#F2F0FA"
+    ];
+    ppm_up [
+      label="Bilinear Interpolation\nback to h x w"
+      fillcolor="#F2F0FA"
+    ];
+    ppm_concat [
+      label="Channel Concatenation\noriginal skip + pooled branches"
+      fillcolor="#F2F0FA"
+    ];
+    ppm_out [
+      label="1x1 Projection + BN + H-swish\nPPM-enhanced skip\nC_s x h x w"
+      fillcolor="#F2F0FA"
+    ];
+  }
+
+  subgraph cluster_decoder_input {
+    label="Decoder Feature";
+    color="#8FAE93";
+    penwidth=1.2;
+    style="rounded";
+
+    dec_deep [
+      label="Deeper Decoder Feature\nC_d x h/2 x w/2 or lower"
+      fillcolor="#EEF7EF"
+    ];
+    dec_up [
+      label="Bilinear Upsampling\nto skip spatial size h x w"
+      fillcolor="#EEF7EF"
+    ];
+  }
+
+  subgraph cluster_fusion {
+    label="Decoder Fusion and Refinement";
+    color="#C9A36A";
+    penwidth=1.2;
+    style="rounded";
+
+    fuse_concat [
+      label="Fusion Operation\nchannel concat: [upsampled decoder, PPM skip]"
+      fillcolor="#FFF7E8"
+    ];
+    conv1 [
+      label="3x3 Conv + BN + H-swish"
+      fillcolor="#FFF7E8"
+    ];
+    se [
+      label="SE Channel Attention\nGAP -> 1x1 reduce -> ReLU\n1x1 expand -> Hardsigmoid\nchannel-wise multiply"
+      fillcolor="#FFF7E8"
+    ];
+    conv2 [
+      label="3x3 Conv + BN + H-swish"
+      fillcolor="#FFF7E8"
+    ];
+    refined [
+      label="Refined Decoder Output\nC_out x h x w"
+      fillcolor="#FFF7E8"
+    ];
+  }
+
+  skip_in -> ppm_pool [
+    style=dashed,
+    label="skip path"
+  ];
+  skip_in -> ppm_concat [
+    style=dashed,
+    label="identity branch"
+  ];
+  ppm_pool -> ppm_proj;
+  ppm_proj -> ppm_up;
+  ppm_up -> ppm_concat;
+  ppm_concat -> ppm_out;
+
+  dec_deep -> dec_up;
+  dec_up -> fuse_concat;
+  ppm_out -> fuse_concat [
+    style=dashed,
+    label="PPM skip"
+  ];
+  fuse_concat -> conv1;
+  conv1 -> se;
+  se -> conv2;
+  conv2 -> refined;
+}

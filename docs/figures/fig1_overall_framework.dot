@@ -1,0 +1,113 @@
+digraph fig1_overall_framework {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad=0.25,
+    nodesep=0.45,
+    ranksep=0.65,
+    fontname="Arial",
+    fontsize=14,
+    labelloc="t",
+    label="Figure 1. Overall Research Framework"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#2F3A45",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontname="Arial",
+    fontsize=11,
+    margin="0.08,0.06"
+  ];
+
+  edge [
+    color="#2F3A45",
+    penwidth=1.25,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=10
+  ];
+
+  subgraph cluster_dataset {
+    label="Dataset";
+    color="#8BA6B8";
+    penwidth=1.2;
+    style="rounded";
+
+    raw_images [
+      label="Raw UAV Images\nRGB captures: data/<subset>/img/*.jpg"
+    ];
+    raw_masks [
+      label="Ground-Truth Masks\n3 classes: Background, Sorghum, Weed\n data/<subset>/msk/*.png"
+    ];
+  }
+
+  subgraph cluster_preprocessing {
+    label="Preprocessing and Augmentation";
+    color="#8FAE93";
+    penwidth=1.2;
+    style="rounded";
+
+    patches [
+      label="Patch Generation\n256x256 image/mask patches\nzero padding for raw image borders"
+      fillcolor="#EEF7EF"
+    ];
+    train_aug [
+      label="Training Transforms\nHorizontal/Vertical flip, CLAHE,\nRandomRotate90, Transpose,\nNormalize, ToTensor"
+      fillcolor="#EEF7EF"
+    ];
+    valid_preprocess [
+      label="Validation/Test Transforms\nNormalize and ToTensor"
+      fillcolor="#EEF7EF"
+    ];
+  }
+
+  subgraph cluster_model {
+    label="Segmentation Model";
+    color="#A8A0C8";
+    penwidth=1.2;
+    style="rounded";
+
+    proposed_model [
+      label="Hybrid U-Net-MobileNetV3\nMobileNetV3-Large encoder\nPPM skip/context modules\nSE/H-swish decoder"
+      fillcolor="#F2F0FA"
+    ];
+  }
+
+  subgraph cluster_output {
+    label="Prediction and Evaluation";
+    color="#C9A36A";
+    penwidth=1.2;
+    style="rounded";
+
+    logits [
+      label="Model Output\n3-channel logits: [B, 3, H, W]"
+      fillcolor="#FFF7E8"
+    ];
+    pred_mask [
+      label="Predicted Mask\nlabel map reconstructed from 256x256 slices"
+      fillcolor="#FFF7E8"
+    ];
+    reports [
+      label="Evaluation Reports\nIoU, mIoU, Dice, Precision,\nRecall, F1-score, Pixel Accuracy,\nconfusion matrix, qualitative grid"
+      fillcolor="#FFF7E8"
+    ];
+  }
+
+  raw_images -> patches;
+  raw_masks -> patches;
+  patches -> train_aug [label="training"];
+  patches -> valid_preprocess [label="validation/test"];
+  train_aug -> proposed_model;
+  valid_preprocess -> proposed_model;
+  proposed_model -> logits;
+  logits -> pred_mask;
+  pred_mask -> reports;
+
+  raw_masks -> reports [
+    style=dotted,
+    label="ground truth for metrics"
+  ];
+}

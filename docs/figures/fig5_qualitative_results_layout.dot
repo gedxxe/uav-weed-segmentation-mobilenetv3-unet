@@ -1,0 +1,125 @@
+digraph fig5_qualitative_results_layout {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad=0.25,
+    nodesep=0.45,
+    ranksep=0.65,
+    fontname="Arial",
+    fontsize=14,
+    labelloc="t",
+    label="Figure 5. Qualitative Segmentation Result Panel Layout"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#2F3A45",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontname="Arial",
+    fontsize=10.5,
+    margin="0.08,0.06"
+  ];
+
+  edge [
+    color="#2F3A45",
+    penwidth=1.25,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=9.5
+  ];
+
+  subgraph cluster_inputs {
+    label="Panel Inputs";
+    color="#8BA6B8";
+    penwidth=1.2;
+    style="rounded";
+
+    input_crop [
+      label="Input Image Crop\nraw UAV RGB crop"
+      fillcolor="#EAF2F8"
+    ];
+    gt_crop [
+      label="Ground-Truth Mask\nclass-color label map"
+      fillcolor="#EAF2F8"
+    ];
+  }
+
+  subgraph cluster_predictions {
+    label="Model Predictions";
+    color="#8FAE93";
+    penwidth=1.2;
+    style="rounded";
+
+    baseline_pred [
+      label="Baseline Prediction\ninclude only if local prediction folder exists\nexample: fixed-encoder ResNet baseline"
+      fillcolor="#EEF7EF"
+    ];
+    proposed_pred [
+      label="Proposed Prediction\nunet_mobilenetv3"
+      fillcolor="#EEF7EF"
+    ];
+    overlay [
+      label="Prediction Overlay\noptional visual inspection row"
+      fillcolor="#EEF7EF"
+    ];
+  }
+
+  subgraph cluster_error {
+    label="Error Analysis";
+    color="#C9A36A";
+    penwidth=1.2;
+    style="rounded";
+
+    error_map [
+      label="Error Map\nblack: correct\nred: false-positive foreground\nblue: false-negative foreground\nyellow: wrong foreground class"
+      fillcolor="#FFF7E8"
+    ];
+    metric_row [
+      label="Optional Per-Image Metrics\nmIoU, Dice, Precision,\nRecall, F1-score"
+      fillcolor="#FFF7E8"
+    ];
+  }
+
+  input_crop -> baseline_pred;
+  input_crop -> proposed_pred;
+  input_crop -> overlay;
+
+  gt_crop -> error_map [
+    style=dotted,
+    label="reference"
+  ];
+  baseline_pred -> error_map [
+    style=dotted,
+    label="if included"
+  ];
+  proposed_pred -> error_map [
+    style=dotted,
+    label="prediction"
+  ];
+  error_map -> metric_row [
+    style=dotted
+  ];
+
+  panel_order [
+    shape=plain,
+    label=<
+      <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" COLOR="#2F3A45">
+        <TR>
+          <TD BGCOLOR="#EAF2F8"><B>Input image</B></TD>
+          <TD BGCOLOR="#EAF2F8"><B>Ground truth</B></TD>
+          <TD BGCOLOR="#EEF7EF"><B>Baseline prediction</B><BR ALIGN="LEFT"/>use only when available</TD>
+          <TD BGCOLOR="#EEF7EF"><B>Proposed prediction</B></TD>
+          <TD BGCOLOR="#FFF7E8"><B>Error map / boundary difference</B></TD>
+        </TR>
+      </TABLE>
+    >
+  ];
+
+  input_crop -> panel_order [
+    style=dotted,
+    arrowhead=none,
+    label="recommended column order"
+  ];
+}

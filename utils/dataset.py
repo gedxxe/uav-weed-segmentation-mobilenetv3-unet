@@ -17,8 +17,12 @@ class UAVDatasetPatches(Dataset):
 
     def __getitem__(self, idx):
         image = cv2.imread(str(self.img_list[idx]))
+        if image is None:
+            raise FileNotFoundError(f"Could not read image patch: {self.img_list[idx]}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(str(self.msk_list[idx]), cv2.IMREAD_GRAYSCALE) # load as np.float32
+        if mask is None:
+            raise FileNotFoundError(f"Could not read mask patch: {self.msk_list[idx]}")
         if self.transform is not None:
             augmentations = self.transform(image=image, mask=mask)
             image = augmentations["image"]

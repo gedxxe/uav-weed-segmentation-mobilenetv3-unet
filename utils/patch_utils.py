@@ -1,8 +1,9 @@
 from pathlib import Path
 from skimage import io as skio
 import numpy as np
-from patchify import patchify
 import math
+
+from utils.labels import LABEL_COLORS
 
 
 def get_idx_to_remove(anns):
@@ -24,7 +25,10 @@ def get_file_lists(data_path, subset):
     annPaths = list(path.glob('./msk/*.png'))
     msk_list = sorted(annPaths)
 
-    assert len(msk_list) == len(img_list), "Different amount of images and masks"
+    if len(img_list) == 0 or len(msk_list) == 0:
+        raise FileNotFoundError(f"No raw images/masks found in {path}. Expected img/*.jpg and msk/*.png.")
+    if len(msk_list) != len(img_list):
+        raise ValueError(f"Different amount of images and masks in {path}: {len(img_list)} images, {len(msk_list)} masks")
     print(f"Found {len(msk_list)} images and masks in {str(path)}")
     return img_list, msk_list 
 
@@ -39,10 +43,7 @@ def load_images(img_ls):
         img = load_image(path = imgPath)
         patches, slc_size = image_to_patches(image=img, b_msk=False)
         imgs.append(patches)
-    imgs = np.stack(imgs)
-    imgs = np.moveaxis(imgs, [0, 1, 2, 3, 4, 5, 6], [3, 4, 5, 6, 0, 1, 2])
-    imgs = imgs.reshape((slc_size, slc_size, 3, -1))
-    imgs = np.moveaxis(imgs, -1, 0)
+    imgs = np.concatenate(imgs, axis=0)
     return imgs
 
 def load_image(path):
@@ -52,7 +53,7 @@ def load_image(path):
     rgb_image = skio.imread(path)
     return rgb_image
 
-def load_masks(msk_ls, labels=[(199, 199, 199), (31, 119, 180), (255, 127, 14)]):
+def load_masks(msk_ls, labels=LABEL_COLORS):
     """
     msk_ls: list of mask paths to load. should be in the same order as the images
     returns: list of patches of masks
@@ -62,13 +63,10 @@ def load_masks(msk_ls, labels=[(199, 199, 199), (31, 119, 180), (255, 127, 14)])
         ann = load_mask(path = annPath, labels=labels)
         patches, slc_size = image_to_patches(image=ann, b_msk=True)
         anns.append(patches)
-    anns = np.stack(anns)
-    anns = np.moveaxis(anns, [0,1,2,3,4], [2,3,4,0,1])
-    anns = anns.reshape((slc_size, slc_size, -1))
-    anns = np.moveaxis(anns, -1, 0)
+    anns = np.concatenate(anns, axis=0)
     return anns
 
-def load_mask(path, labels=[(199, 199, 199), (31, 119, 180), (255, 127, 14)]):
+def load_mask(path, labels=LABEL_COLORS):
     """
     loads a mask based on the path and encodes it according to a list of RGB tuples 
     """
@@ -93,11 +91,13 @@ def image_to_patches(image, slc_size=256, b_msk=False):
     if b_msk==False:
         padded_rgb_image = np.zeros((padded_shape[0], padded_shape[1], 3), dtype=np.uint8)
         padded_rgb_image[:image.shape[0],:image.shape[1]] = image
-        patches = patchify(padded_rgb_image, (slc_size, slc_size, 3), step=slc_size)
+        patches = padded_rgb_image.reshape(x, slc_size, y, slc_size, 3)
+        patches = patches.swapaxes(1, 2).reshape(-1, slc_size, slc_size, 3)
     elif b_msk==True:
         padded_rgb_image = np.zeros((padded_shape[0], padded_shape[1]), dtype=np.uint8)
         padded_rgb_image[:image.shape[0],:image.shape[1]] = image
-        patches = patchify(padded_rgb_image, (slc_size, slc_size), step=slc_size)
+        patches = padded_rgb_image.reshape(x, slc_size, y, slc_size)
+        patches = patches.swapaxes(1, 2).reshape(-1, slc_size, slc_size)
 
     return patches, slc_size
 

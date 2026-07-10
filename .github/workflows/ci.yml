@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Create virtual environment
+        shell: pwsh
+        run: python -m venv .venv
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\python.exe -m pip install --upgrade pip "setuptools<82" wheel
+          .\.venv\Scripts\python.exe -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+      - name: Compile Python files
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\python.exe -m py_compile train.py small_training.py predict_testset.py compare_model_predictions.py utils\parser.py utils\train.py utils\manual_unet_mobilenetv3.py scripts\check_comparison_status.py scripts\run_model_suite.py
+
+      - name: Run unit smoke tests
+        shell: pwsh
+        run: .\.venv\Scripts\python.exe -m unittest discover -s tests
+
+      - name: Validate comparison script plan
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\run_resnet34_architecture_comparison.ps1 -NFolds 2 -MaxEpochs 1 -PlanOnly
+          powershell -ExecutionPolicy Bypass -File .\scripts\run_proposed_model.ps1 -NFolds 2 -MaxEpochs 1 -PlanOnly
+          .\.venv\Scripts\python.exe scripts\run_model_suite.py baseline --encoder resnet34 --n_folds 2 --max_epochs 1 --plan_only
+          .\.venv\Scripts\python.exe scripts\run_model_suite.py proposed --n_folds 2 --max_epochs 1 --plan_only
+          .\.venv\Scripts\python.exe scripts\run_model_suite.py full --encoder resnet34 --n_folds 2 --max_epochs 1 --plan_only
