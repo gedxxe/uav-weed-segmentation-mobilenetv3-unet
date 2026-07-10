@@ -1,0 +1,20 @@
+[
+  {
+    "model": "unet_mobilenetv3_aux",
+    "architecture": "unet_mobilenetv3_aux",
+    "encoder_name": "mobilenetv3_large",
+    "mIoU": 0.8143036987465844,
+    "mean_dice": 0.8911888065184893,
+    "pixel_accuracy": 0.9938814139660493,
+    "trainable_params": 3980757,
+    "total_params": 3980757,
+    "benchmark_input_size": 480,
+    "gflops": 17.47931308,
+    "model_size_mb": 15.279170989990234,
+    "fps": 47.64029292110893,
+    "latency_ms_per_image": 20.990634999998292,
+    "peak_gpu_memory_mb": 147.45947265625,
+    "cpu_latency_ms_per_image": null,
+    "efficiency_error": ""
+  }
+]

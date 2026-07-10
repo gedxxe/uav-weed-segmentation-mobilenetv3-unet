@@ -1,6 +1,6 @@
 # Development Tracker
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 This file tracks what has actually been implemented or verified in this checkout. Do not use it to record planned work as completed.
 
@@ -48,6 +48,7 @@ This file tracks what has actually been implemented or verified in this checkout
 | Fair baseline retrain cleanup script | Implemented, applied | `scripts/cleanup_retrain_baselines.ps1` is dry-run by default. On 2026-07-10 it was applied to remove repo caches/temp files, webcam inference captures, old proposed-v1 artifacts, and old ResNet-34/ResNet-50 baseline checkpoints/predictions/reports/Optuna DBs while preserving `.venv`, `data`, `exports`, `results/training_logs`, and the proposed-v2 checkpoint. |
 | README and runbook workflow cleanup | Implemented, re-audited | `README.md`, `AGENTS.md`, `docs/MODEL_COMPARISON_RUNBOOK.md`, and `docs/PROPOSED_MODEL_UNET_MOBILENETV3.md` now present proposed v2 plus ResNet-50 comparison as the primary workflow, keep ResNet-34 as historical/progress context, document model fundamentals, metric formulas, conservative contribution boundaries, docs map, edge export, OpenCV GUI demo, and headless benchmark commands without duplicated command tables. |
 | README fair retrain command set | Implemented, PlanOnly checked | `README.md` now lists fair retrain commands for proposed v2 and all baseline encoders: ResNet-18, ResNet-34, ResNet-50, and ResNet-101. The baseline commands use `-SkipProposedTraining` so the proposed-v2 checkpoint remains fixed while baselines retrain. PlanOnly checks passed for proposed v2 and all four baseline encoder wrappers. |
+| README patch prerequisite | Implemented, checked | `README.md` now places `save_patches.py --root_path .` and `scripts/check_dataset.py --require-patches` as workflow step 0 before any PowerShell training wrapper. This is meant to prevent missing `data/<subset>/patches/...` path errors on fresh laptops/PCs. Current `check_dataset.py --require-patches` passed with `trainval=2156`, `test=990`, and `test_different_bbch=220` patch image/mask pairs. |
 | Edge NCNN export preparation | Implemented, checked locally | `scripts/export_proposed_ncnn.py` exports the proposed v2 checkpoint through a segmentation-only wrapper. Local pnnx CLI produced `model.ncnn.param` and `model.ncnn.bin`; TorchScript parity passed. Pi-side/runtime NCNN parity is still not run. |
 | Local OpenCV inference checker | Implemented, checked previously on still image | `scripts/check_webcam_inference.py` supports `pytorch`, `torchscript`, and optional `ncnn` inference backends plus explicit `--view gui` / `--view headless` display modes. Old `results/webcam_inference_checks/` outputs were cleaned on 2026-07-10. Live webcam runs are citeable only after the selected run writes a fresh `results/webcam_inference_checks/<run_name>/manifest.json`. |
 

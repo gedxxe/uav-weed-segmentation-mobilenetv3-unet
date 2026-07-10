@@ -1,0 +1,2 @@
+total_params,trainable_params,model_size_mb,efficiency_error,flops,gflops,flop_policy,latency_ms_per_image,fps,peak_gpu_memory_mb,benchmark_device,cpu_latency_ms_per_image,cpu_fps,model,architecture,encoder_name,checkpoint,checkpoint_loaded,input_size
+3980757,3980757,15.279170989990234,,17479313080,17.47931308,Conv/Linear multiply-add operations are counted as 2 FLOPs.,20.990634999998292,47.64029292110893,147.45947265625,cuda,,,unet_mobilenetv3_aux,unet_mobilenetv3_aux,mobilenetv3_large,models\unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1.pth.tar,True,480

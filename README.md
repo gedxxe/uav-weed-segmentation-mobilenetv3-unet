@@ -355,7 +355,7 @@ data/<subset>/patches/img/*.png
 data/<subset>/patches/msk/*.png
 ```
 
-Generate and check patches:
+Generate and check patches before running any training wrapper:
 
 ```powershell
 .\.venv\Scripts\python.exe save_patches.py --root_path .
@@ -391,12 +391,20 @@ Run commands one at a time and wait until the PowerShell prompt returns before s
 Workflow order:
 
 ```text
+0. Generate and verify patch folders on a fresh machine or after data cleanup.
 1. Preview proposed-v2 training.
 2. Train proposed v2 if the checkpoint should be refreshed.
 3. Train fair ResNet baselines against the fixed proposed-v2 checkpoint.
 4. Evaluate the same checkpoints on test_different_bbch.
 5. Export proposed v2 for TorchScript or NCNN.
 6. Run a local OpenCV image/video/webcam check.
+```
+
+Training does not consume the raw `data/<subset>/img` and `data/<subset>/msk` folders directly. The training and inference scripts expect generated patch folders under `data/<subset>/patches/`. On a new laptop/PC, run the patch step once before any `scripts/run_*.ps1` training command. If a training run fails with a missing patch/image/mask path, rerun these two commands first:
+
+```powershell
+.\.venv\Scripts\python.exe save_patches.py --root_path .
+.\.venv\Scripts\python.exe scripts\check_dataset.py --require-patches
 ```
 
 Important wrapper behavior:
@@ -410,6 +418,13 @@ Important wrapper behavior:
 | `-CleanStudy` | Delete the matching Optuna study before rerun. Use only for intentional resets. |
 
 ## Command Menu
+
+Generate and verify patches first on a fresh machine:
+
+```powershell
+.\.venv\Scripts\python.exe save_patches.py --root_path .
+.\.venv\Scripts\python.exe scripts\check_dataset.py --require-patches
+```
 
 Preview proposed-v2 training:
 

@@ -1,0 +1,2 @@
+model,architecture,encoder_name,mIoU,mean_dice,pixel_accuracy,trainable_params,total_params,benchmark_input_size,gflops,model_size_mb,fps,latency_ms_per_image,peak_gpu_memory_mb,cpu_latency_ms_per_image,efficiency_error
+unet_mobilenetv3_aux,unet_mobilenetv3_aux,mobilenetv3_large,0.8143036987465844,0.8911888065184893,0.9938814139660493,3980757,3980757,480,17.47931308,15.279170989990234,47.64029292110893,20.990634999998292,147.45947265625,,

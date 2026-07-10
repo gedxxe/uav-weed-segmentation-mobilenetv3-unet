@@ -1,0 +1,70 @@
+{
+  "root_path": ".",
+  "subset": "test",
+  "models": [
+    {
+      "model_name": "unet_mobilenetv3_aux",
+      "checkpoint": "prediction directory only",
+      "prediction_dir": "results\\predictions\\test\\unet_mobilenetv3_aux",
+      "num_images": 3,
+      "image_files": [
+        "data\\test\\img\\test_01.jpg",
+        "data\\test\\img\\test_02.jpg",
+        "data\\test\\img\\test_03.jpg"
+      ],
+      "ground_truth_files": [
+        "data\\test\\msk\\test_01.png",
+        "data\\test\\msk\\test_02.png",
+        "data\\test\\msk\\test_03.png"
+      ],
+      "prediction_files": [
+        "results\\predictions\\test\\unet_mobilenetv3_aux\\test_01_pred.png",
+        "results\\predictions\\test\\unet_mobilenetv3_aux\\test_02_pred.png",
+        "results\\predictions\\test\\unet_mobilenetv3_aux\\test_03_pred.png"
+      ],
+      "metrics": {
+        "pixel_accuracy": 0.9938814139660493,
+        "global_accuracy": 0.9938814139660493,
+        "mean_iou": 0.8143036987465844,
+        "mean_dice": 0.8911888065184893,
+        "per_class": [
+          {
+            "class_id": 0,
+            "class": "Background",
+            "precision": 0.9982520152695806,
+            "recall": 0.9964513105698646,
+            "f1_score": 0.9973508501328352,
+            "iou": 0.9947156991705107,
+            "dice": 0.9973508501328351,
+            "support": 58448620
+          },
+          {
+            "class_id": 1,
+            "class": "Sorghum",
+            "precision": 0.8508030419615595,
+            "recall": 0.9213230177650104,
+            "f1_score": 0.8846598940761822,
+            "iou": 0.7931750049850785,
+            "dice": 0.8846598940761822,
+            "support": 1018913
+          },
+          {
+            "class_id": 2,
+            "class": "Weed",
+            "precision": 0.7726427858792658,
+            "recall": 0.8114177042592128,
+            "f1_score": 0.7915556753464504,
+            "iou": 0.6550203920841637,
+            "dice": 0.7915556753464504,
+            "support": 418035
+          }
+        ],
+        "support": 59885568
+      }
+    }
+  ],
+  "report_dir": "results\\reports\\test\\proposed_v2_model",
+  "crop_size": 400,
+  "max_examples": 6,
+  "metrics_summary_json": "results\\reports\\test\\proposed_v2_model\\metrics_summary.json"
+}

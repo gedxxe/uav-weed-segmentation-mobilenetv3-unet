@@ -1,0 +1,8 @@
+{
+  "run_id": "fair_proposed_v2_aux_fg_e150_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1",
+  "epochs_logged": 565,
+  "total_training_time_sec": 12751.638669099997,
+  "total_training_time_minutes": 212.52731115166662,
+  "csv": "results\\training_logs\\fair_proposed_v2_aux_fg_e150_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1_training_log.csv",
+  "json": "results\\training_logs\\fair_proposed_v2_aux_fg_e150_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1_unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1_training_log.json"
+}

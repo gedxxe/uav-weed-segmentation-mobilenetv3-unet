@@ -1,0 +1,23 @@
+[
+  {
+    "total_params": 3980757,
+    "trainable_params": 3980757,
+    "model_size_mb": 15.279170989990234,
+    "efficiency_error": "",
+    "flops": 17479313080,
+    "gflops": 17.47931308,
+    "flop_policy": "Conv/Linear multiply-add operations are counted as 2 FLOPs.",
+    "latency_ms_per_image": 20.990634999998292,
+    "fps": 47.64029292110893,
+    "peak_gpu_memory_mb": 147.45947265625,
+    "benchmark_device": "cuda",
+    "cpu_latency_ms_per_image": null,
+    "cpu_fps": null,
+    "model": "unet_mobilenetv3_aux",
+    "architecture": "unet_mobilenetv3_aux",
+    "encoder_name": "mobilenetv3_large",
+    "checkpoint": "models\\unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1.pth.tar",
+    "checkpoint_loaded": true,
+    "input_size": 480
+  }
+]
