@@ -163,82 +163,102 @@ Main Python:     .\.venv\Scripts\python.exe
 
 ## Model Fundamentals
 
-The model receives an RGB image patch and produces one logit channel per semantic class:
+The model receives an RGB image patch and produces one score map, or logit map, for each semantic class.
 
-$$
-z \in \mathbb{R}^{C \times H \times W}, \qquad C = 3
-$$
+$$z \in \mathbb{R}^{C \times H \times W},\quad C = 3$$
 
-Softmax converts logits into per-class probabilities:
+Here, `C = 3` means the output has one channel for Background, one for Sorghum, and one for Weed. At each pixel, softmax converts logits into class probabilities:
 
-$$
-p_{i,c} =
-\frac{\exp(z_{i,c})}
-{\sum_{k=1}^{C}\exp(z_{i,k})}
-$$
+$$p_{i,c} = \frac{\exp(z_{i,c})}{\sum_{k=1}^{C}\exp(z_{i,k})}$$
 
 where `i` is a pixel index and `c` is a class index.
 
 The final class for each pixel is:
 
-$$
-\hat{y}_i = \arg\max_{c} p_{i,c}
-$$
+$$\hat{y}_i = \arg\max_{c} p_{i,c}$$
 
-For proposed v2, the auxiliary foreground target is:
+That is why this repository uses `argmax` for final multi-class prediction. It does not use a sigmoid threshold for the three-class semantic mask.
 
-$$
-y_i^{fg} =
-\begin{cases}
-0, & y_i = 0 \\
-1, & y_i > 0
-\end{cases}
-$$
+## Auxiliary Foreground Head
 
-So Background remains class `0`, while Sorghum and Weed are grouped as foreground only for the auxiliary branch.
+The proposed v2 model adds a small auxiliary head during training. It is easiest to think of the model as having two teachers:
+
+| Teacher | Question asked during training | Output classes |
+| --- | --- | --- |
+| Main segmentation head | "Which exact class is this pixel?" | Background, Sorghum, Weed |
+| Auxiliary foreground head | "Is this pixel plant material or not?" | Background, Vegetation |
+
+The main head learns the full three-class task. The auxiliary head gives a simpler side task: separate bare/background pixels from all plant pixels. Sorghum and Weed are still kept separate in the main segmentation head, but the auxiliary branch groups them together only for this extra training signal.
+
+The auxiliary target is derived from the same ground-truth mask. No extra annotation file is needed:
+
+$$y_i^{fg} = 0 \quad \text{if} \quad y_i = 0$$
+
+$$y_i^{fg} = 1 \quad \text{if} \quad y_i \in \{1, 2\}$$
+
+So the mapping is:
+
+| Original label | Original class | Auxiliary label | Auxiliary class |
+| --- | --- | --- | --- |
+| `0` | Background | `0` | Background |
+| `1` | Sorghum | `1` | Vegetation |
+| `2` | Weed | `1` | Vegetation |
+
+Technical implementation:
+
+| Item | Implementation detail |
+| --- | --- |
+| Architecture name | `unet_mobilenetv3_aux` |
+| Shared feature path | MobileNetV3-Large encoder, PPM skip/context modules, SE/H-swish decoder |
+| Main head | `Dropout(0.1)` plus `Conv2d(decoder_channels, 3, kernel_size=3, padding=1)` |
+| Foreground head | `Dropout(0.1)` plus `Conv2d(decoder_channels, 2, kernel_size=3, padding=1)` |
+| Forward output | A dict with `segmentation` and `foreground` tensors |
+| Segmentation tensor | Shape `[B, 3, H, W]` |
+| Foreground tensor | Shape `[B, 2, H, W]` |
+| Foreground target in code | `(targets > 0).long()` |
+| Inference/export output | Segmentation logits only |
+
+The important part is that both heads are attached to the same decoder feature map. During backpropagation, the auxiliary foreground loss also updates the shared encoder and decoder weights. After training, the foreground head is not treated as the final classifier; its job was to help shape the shared features.
+
+What the auxiliary head does not do:
+
+| Misreading | Correct interpretation |
+| --- | --- |
+| It replaces the Sorghum-vs-Weed classifier. | No. The final semantic mask still comes from the 3-class segmentation head. |
+| It exports an extra deployment output. | No. Edge export uses the segmentation-only wrapper. |
+| It proves the model is better by itself. | No. It is a training design choice that still needs checkpoint, prediction, and comparison evidence. |
 
 ## Training Objective
 
 The proposed v2 training loss combines 3-class segmentation supervision and foreground/background auxiliary supervision:
 
-$$
-\mathcal{L}_{total}
-=
-\lambda_{ce}\mathcal{L}_{CE}
-+
-\lambda_{dice}\mathcal{L}_{Dice}
-+
-\lambda_{fg}\mathcal{L}_{FG}
-$$
+$$\mathcal{L}_{total} = \lambda_{ce}\mathcal{L}_{CE} + \lambda_{dice}\mathcal{L}_{Dice} + \lambda_{fg}\mathcal{L}_{FG}$$
 
 Cross-entropy for the 3-class segmentation head:
 
-$$
-\mathcal{L}_{CE}
-=
--\frac{1}{N}\sum_{i=1}^{N}\log p_{i,y_i}
-$$
+$$\mathcal{L}_{CE} = -\frac{1}{N}\sum_{i=1}^{N}\log p_{i,y_i}$$
 
 Multi-class soft Dice loss:
 
-$$
-\mathcal{L}_{Dice}
-=
-1
--
-\frac{1}{C}
-\sum_{c=1}^{C}
-\frac{2\sum_i p_{i,c}g_{i,c}+\epsilon}
-{\sum_i p_{i,c}+\sum_i g_{i,c}+\epsilon}
-$$
+$$\mathcal{L}_{Dice} = 1 - \frac{1}{C}\sum_{c=1}^{C}\frac{2\sum_i p_{i,c}g_{i,c}+\epsilon}{\sum_i p_{i,c}+\sum_i g_{i,c}+\epsilon}$$
 
 Auxiliary foreground loss:
 
-$$
-\mathcal{L}_{FG}
-=
--\frac{1}{N}\sum_{i=1}^{N}\log q_{i,y_i^{fg}}
-$$
+$$\mathcal{L}_{FG} = -\frac{1}{N}\sum_{i=1}^{N}\log q_{i,y_i^{fg}}$$
+
+Symbol meaning:
+
+| Symbol | Meaning |
+| --- | --- |
+| `p` | Softmax probability from the 3-class segmentation head. |
+| `q` | Softmax probability from the auxiliary foreground head. |
+| `y` | Ground-truth 3-class label. |
+| `y_fg` | Derived foreground label, where Background is `0` and Sorghum/Weed are `1`. |
+| `g` | One-hot ground-truth mask used by Dice loss. |
+| `N` | Number of pixels being optimized. |
+| `C` | Number of semantic classes, here `3`. |
+| `epsilon` | Small stabilizer to avoid division by zero. |
+| `lambda_ce`, `lambda_dice`, `lambda_fg` | Loss weights. In the current command they correspond to `CeWeight`, `DiceWeight`, and `ForegroundAuxWeight`. |
 
 Current proposed-v2 recipe:
 
@@ -249,63 +269,31 @@ foreground_aux_weight = 0.3
 validation objective = foreground_macro_f1
 ```
 
-The foreground head is a training aid. It is not the final Sorghum-vs-Weed classifier.
+In code, this is implemented by `AuxiliaryForegroundLoss`: it first computes the primary segmentation loss, then adds the weighted foreground cross-entropy term when `foreground_aux_weight > 0`.
 
 ## Evaluation Metrics
 
 Metrics are computed from saved prediction masks and ground-truth masks. For class `c`:
 
-$$
-IoU_c =
-\frac{TP_c}
-{TP_c + FP_c + FN_c}
-$$
+$$IoU_c = \frac{TP_c}{TP_c + FP_c + FN_c}$$
 
-$$
-Dice_c =
-\frac{2TP_c}
-{2TP_c + FP_c + FN_c}
-$$
+$$Dice_c = \frac{2TP_c}{2TP_c + FP_c + FN_c}$$
 
-$$
-Precision_c =
-\frac{TP_c}
-{TP_c + FP_c}
-$$
+$$Precision_c = \frac{TP_c}{TP_c + FP_c}$$
 
-$$
-Recall_c =
-\frac{TP_c}
-{TP_c + FN_c}
-$$
+$$Recall_c = \frac{TP_c}{TP_c + FN_c}$$
 
-$$
-F1_c =
-\frac{2 \cdot Precision_c \cdot Recall_c}
-{Precision_c + Recall_c}
-$$
+$$F1_c = \frac{2 \cdot Precision_c \cdot Recall_c}{Precision_c + Recall_c}$$
 
 Mean IoU and mean Dice:
 
-$$
-mIoU =
-\frac{1}{C}
-\sum_{c=1}^{C} IoU_c
-$$
+$$mIoU = \frac{1}{C}\sum_{c=1}^{C}IoU_c$$
 
-$$
-MeanDice =
-\frac{1}{C}
-\sum_{c=1}^{C} Dice_c
-$$
+$$MeanDice = \frac{1}{C}\sum_{c=1}^{C}Dice_c$$
 
 Pixel accuracy:
 
-$$
-PixelAccuracy =
-\frac{\sum_c TP_c}
-{TotalPixels}
-$$
+$$PixelAccuracy = \frac{\sum_c TP_c}{TotalPixels}$$
 
 Efficiency reports use a `480x480` RGB input unless the command overrides the benchmark input size.
 
@@ -473,9 +461,7 @@ checkpoint   = models/unet_mobilenetv3_aux_mobilenetv3_large_dil0_bilin1_pre1.pt
 
 The exported runtime output is the segmentation tensor:
 
-$$
-output \in \mathbb{R}^{1 \times 3 \times H \times W}
-$$
+$$output \in \mathbb{R}^{1 \times 3 \times H \times W}$$
 
 The raw auxiliary dictionary output is not exported as the final runtime contract.
 
