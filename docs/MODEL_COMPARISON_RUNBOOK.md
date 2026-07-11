@@ -6,7 +6,7 @@ Tujuan dokumen ini: menjalankan eksperimen dengan mode yang eksplisit.
 | --- | --- | --- |
 | `baseline` | 5 baseline: `fcn8s`, `fcn16s`, `fcn32s`, `unet`, `dlplus` dengan satu encoder ResNet yang sama. | Membandingkan arsitektur baseline tanpa proposed model. |
 | `proposed` | 1 proposed v1 model: `unet_mobilenetv3 mobilenetv3_large`. | Melatih atau mengevaluasi proposed v1 saja. |
-| `proposed_v2` | 1 proposed v2 model: `unet_mobilenetv3_aux mobilenetv3_large`. | Melatih atau mengevaluasi proposed v2 auxiliary foreground head saja. |
+| `proposed_v2` | 1 proposed v2 model: `unet_mobilenetv3_aux mobilenetv3_large`. | Melatih atau mengevaluasi model segmentasi v2; auxiliary foreground head hanya dipakai sebagai training supervision. |
 | `full` | 6 model: 5 baseline fixed-ResNet plus proposed v1. | Komparasi utama v1. |
 | `full_v2` | 6 model: 5 baseline fixed-ResNet plus proposed v2. | Komparasi utama v2 tanpa menimpa report v1. |
 | `ablation` | `unet_<encoder>`, `unet_mobilenetv3_base`, `unet_mobilenetv3_ppm`, `unet_mobilenetv3`, `unet_mobilenetv3_aux`. | Ablation study proposed model. |
@@ -39,6 +39,8 @@ proposed v2 model:   ce_dice_aux_foreground loss, automatic class weights, valid
 ```
 
 Reason: the first proposed-model failure mode was mostly `Weed -> Sorghum` confusion, not foreground/background failure. `ce_dice` keeps segmentation overlap pressure from Dice while adding class-discriminative CE pressure for minority classes. `validation_loss=macro_f1` selects the checkpoint by the same class-balanced metric family used in the reports, instead of selecting only by the old Dice validation loss.
+
+Important naming note: `foreground_macro_f1` is computed from the main 3-class segmentation logits by averaging F1 over Sorghum and Weed. It is not computed from the auxiliary binary foreground head.
 
 The older post-ResNet-50 v1 tuning pass targeted balanced Sorghum+Weed foreground performance with `ClassWeightStrategy sqrt_inverse` and `ValidationLoss foreground_macro_f1`. Keep that recipe as historical unless intentionally rerunning the v1 tuning branch.
 
@@ -302,7 +304,7 @@ Python uses double-dash parameters:
 | `ClassWeightStrategy` / `--class_weight_strategy` | Formula for automatic baseline class weights. | Default `inverse_frequency`; use `sqrt_inverse` for less aggressive imbalance weighting. |
 | `ClassWeightStrategy` in `run_proposed_model.ps1` / `--proposed_class_weight_strategy` | Formula for automatic proposed-model class weights. | Use the recipe being evaluated; the current proposed-v2 final-candidate run used `inverse_frequency`. |
 | `ValidationLoss` / `--validation_loss` | Checkpoint selection objective for baseline models. | Default `dice` preserves old baseline behavior. Other options: `same`, `macro_f1`, `weed_f1`, `foreground_macro_f1`. |
-| `ValidationLoss` in `run_proposed_model.ps1` / `--proposed_validation_loss` | Checkpoint selection objective for proposed model. | Default `macro_f1`; use `foreground_macro_f1` to select by Sorghum+Weed F1 only. |
+| `ValidationLoss` in `run_proposed_model.ps1` / `--proposed_validation_loss` | Checkpoint selection objective for proposed model. | Default `macro_f1`; use `foreground_macro_f1` to select by Sorghum+Weed F1 from the main segmentation head only. |
 | `SkipTraining` / `--skip_training` | Uses existing checkpoints and skips training. | Useful for regenerating predictions/reports. |
 | `SkipPrediction` / `--skip_prediction` | Trains only and skips prediction/report generation. | Useful when evaluation will be run later. |
 | `SkipEvaluation` / `--skip_evaluation` | Skips the final complete evaluator. | Use when you only want training/prediction/comparison. |

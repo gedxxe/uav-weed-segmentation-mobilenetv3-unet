@@ -129,6 +129,14 @@ Default local value:
 foreground_aux_weight = 0.3
 ```
 
+Current v2 checkpoint-selection objective:
+
+```text
+validation_loss = foreground_macro_f1
+```
+
+Here `foreground_macro_f1` is foreground semantic macro F1 from the main 3-class segmentation logits. It averages F1 for Sorghum and Weed only. It is not computed from the auxiliary binary foreground head.
+
 The v2 checkpoint path is independent from v1:
 
 ```text
@@ -246,7 +254,22 @@ Evaluate existing ablation predictions/checkpoints without retraining:
 .\.venv\Scripts\python.exe evaluate_model_suite.py ablation --encoder resnet34 --root_path . --subset test --device cuda
 ```
 
-Current recommended proposed-model loss recipe:
+Current recommended v2 proposed-model loss recipe:
+
+```text
+loss: ce_dice_aux_foreground
+class_weights: auto
+class_weight_max: 8.0
+class_weight_strategy: inverse_frequency
+ce_weight: 1.0
+dice_weight: 1.0
+foreground_aux_weight: 0.3
+validation_loss: foreground_macro_f1
+```
+
+The validation objective above still evaluates the main 3-class segmentation head. The word `foreground` means the semantic foreground classes, Sorghum and Weed, not the auxiliary binary foreground output.
+
+Historical v1 proposed-model loss recipe:
 
 ```text
 loss: ce_dice
@@ -258,7 +281,7 @@ dice_weight: 1.0
 validation_loss: macro_f1
 ```
 
-This is intentional. The first observed proposed-model failure was not missing plant shapes; it was class confusion where many true `Weed` pixels were predicted as `Sorghum`. A combined CE + Dice objective is more appropriate for that failure mode than Dice-only training. `validation_loss=macro_f1` selects the checkpoint by validation macro F1, which is closer to the report objective than Dice-only checkpoint selection.
+This v1 recipe was intentional at the time. The first observed proposed-model failure was not missing plant shapes; it was class confusion where many true `Weed` pixels were predicted as `Sorghum`. A combined CE + Dice objective was more appropriate for that failure mode than Dice-only training. `validation_loss=macro_f1` selected the checkpoint by validation macro F1, which was closer to the report objective than Dice-only checkpoint selection.
 
 Historical v1 follow-up before the auxiliary-foreground v2 run:
 

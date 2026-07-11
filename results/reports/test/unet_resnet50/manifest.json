@@ -1,0 +1,70 @@
+{
+  "root_path": ".",
+  "subset": "test",
+  "models": [
+    {
+      "model_name": "unet_resnet50",
+      "checkpoint": "models\\unet_resnet50_dil0_bilin1_pre1.pth.tar",
+      "prediction_dir": "results\\predictions\\test\\unet_resnet50",
+      "num_images": 3,
+      "image_files": [
+        "data\\test\\img\\test_01.jpg",
+        "data\\test\\img\\test_02.jpg",
+        "data\\test\\img\\test_03.jpg"
+      ],
+      "ground_truth_files": [
+        "data\\test\\msk\\test_01.png",
+        "data\\test\\msk\\test_02.png",
+        "data\\test\\msk\\test_03.png"
+      ],
+      "prediction_files": [
+        "results\\predictions\\test\\unet_resnet50\\test_01_pred.png",
+        "results\\predictions\\test\\unet_resnet50\\test_02_pred.png",
+        "results\\predictions\\test\\unet_resnet50\\test_03_pred.png"
+      ],
+      "metrics": {
+        "pixel_accuracy": 0.9947164064637409,
+        "global_accuracy": 0.9947164064637409,
+        "mean_iou": 0.8281692079772593,
+        "mean_dice": 0.9006956800794753,
+        "per_class": [
+          {
+            "class_id": 0,
+            "class": "Background",
+            "precision": 0.997043583070082,
+            "recall": 0.9983390027001493,
+            "f1_score": 0.9976908723863026,
+            "iou": 0.9953923843451471,
+            "dice": 0.9976908723863026,
+            "support": 58448620
+          },
+          {
+            "class_id": 1,
+            "class": "Sorghum",
+            "precision": 0.8920679981231607,
+            "recall": 0.8919112819249534,
+            "f1_score": 0.8919896331405784,
+            "iou": 0.8050372630256709,
+            "dice": 0.8919896331405783,
+            "support": 1018913
+          },
+          {
+            "class_id": 2,
+            "class": "Weed",
+            "precision": 0.902318025909067,
+            "recall": 0.738789814250003,
+            "f1_score": 0.8124065347115449,
+            "iou": 0.6840779765609599,
+            "dice": 0.8124065347115449,
+            "support": 418035
+          }
+        ],
+        "support": 59885568
+      }
+    }
+  ],
+  "report_dir": "results\\reports\\test\\unet_resnet50",
+  "crop_size": 400,
+  "max_examples": 6,
+  "metrics_summary_json": "results\\reports\\test\\unet_resnet50\\metrics_summary.json"
+}

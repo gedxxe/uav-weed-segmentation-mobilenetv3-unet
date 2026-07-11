@@ -227,6 +227,7 @@ What the auxiliary head does not do:
 | It replaces the Sorghum-vs-Weed classifier. | No. The final semantic mask still comes from the 3-class segmentation head. |
 | It exports an extra deployment output. | No. Edge export uses the segmentation-only wrapper. |
 | It proves the model is better by itself. | No. It is a training design choice that still needs checkpoint, prediction, and comparison evidence. |
+| `foreground_macro_f1` measures the auxiliary head. | No. `foreground_macro_f1` is computed from the main 3-class segmentation output over Sorghum and Weed only. |
 
 ## Training Objective
 
@@ -268,6 +269,8 @@ dice_weight = 1.0
 foreground_aux_weight = 0.3
 validation objective = foreground_macro_f1
 ```
+
+In this repository, `foreground_macro_f1` means foreground **semantic** macro F1 from the main segmentation head. It averages F1 for class `1 = Sorghum` and class `2 = Weed` from the 3-class prediction. It is not computed from the auxiliary binary foreground head. The auxiliary head is used only through the training loss term above.
 
 In code, this is implemented by `AuxiliaryForegroundLoss`: it first computes the primary segmentation loss, then adds the weighted foreground cross-entropy term when `foreground_aux_weight > 0`.
 

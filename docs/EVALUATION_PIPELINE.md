@@ -16,7 +16,7 @@ Supported modes:
 | --- | --- | --- |
 | `baseline` | `fcn8s`, `fcn16s`, `fcn32s`, `unet`, `dlplus` with one fixed ResNet encoder | Five-baseline comparison. |
 | `proposed` | `unet_mobilenetv3 mobilenetv3_large` | Proposed v1-only evaluation. |
-| `proposed_v2` | `unet_mobilenetv3_aux mobilenetv3_large` | Proposed v2 auxiliary-foreground evaluation. |
+| `proposed_v2` | `unet_mobilenetv3_aux mobilenetv3_large` | Proposed v2 semantic-segmentation evaluation; auxiliary foreground is training supervision, not the final evaluation output. |
 | `full` | Five fixed-ResNet baselines plus proposed v1 | Main v1 six-model results table. |
 | `full_v2` | Five fixed-ResNet baselines plus proposed v2 | Main v2 six-model results table without overwriting v1 reports. |
 | `ablation` | `unet_<encoder>`, `unet_mobilenetv3_base`, `unet_mobilenetv3_ppm`, `unet_mobilenetv3`, `unet_mobilenetv3_aux` | Proposed-model component ablation. |

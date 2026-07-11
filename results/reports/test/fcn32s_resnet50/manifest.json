@@ -1,0 +1,70 @@
+{
+  "root_path": ".",
+  "subset": "test",
+  "models": [
+    {
+      "model_name": "fcn32s_resnet50",
+      "checkpoint": "models\\fcn32s_resnet50_dil0_bilin1_pre1.pth.tar",
+      "prediction_dir": "results\\predictions\\test\\fcn32s_resnet50",
+      "num_images": 3,
+      "image_files": [
+        "data\\test\\img\\test_01.jpg",
+        "data\\test\\img\\test_02.jpg",
+        "data\\test\\img\\test_03.jpg"
+      ],
+      "ground_truth_files": [
+        "data\\test\\msk\\test_01.png",
+        "data\\test\\msk\\test_02.png",
+        "data\\test\\msk\\test_03.png"
+      ],
+      "prediction_files": [
+        "results\\predictions\\test\\fcn32s_resnet50\\test_01_pred.png",
+        "results\\predictions\\test\\fcn32s_resnet50\\test_02_pred.png",
+        "results\\predictions\\test\\fcn32s_resnet50\\test_03_pred.png"
+      ],
+      "metrics": {
+        "pixel_accuracy": 0.9874728916322544,
+        "global_accuracy": 0.9874728916322544,
+        "mean_iou": 0.6861889030946472,
+        "mean_dice": 0.7955563952957269,
+        "per_class": [
+          {
+            "class_id": 0,
+            "class": "Background",
+            "precision": 0.9927815744683582,
+            "recall": 0.9950075639082668,
+            "f1_score": 0.9938933228214593,
+            "iou": 0.9878607759652964,
+            "dice": 0.9938933228214593,
+            "support": 58448620
+          },
+          {
+            "class_id": 1,
+            "class": "Sorghum",
+            "precision": 0.7352211982980711,
+            "recall": 0.7290661714984498,
+            "f1_score": 0.7321307487916991,
+            "iou": 0.5774497236950625,
+            "dice": 0.7321307487916991,
+            "support": 1018913
+          },
+          {
+            "class_id": 2,
+            "class": "Weed",
+            "precision": 0.7975994287899348,
+            "recall": 0.5638307797194014,
+            "f1_score": 0.6606451142740221,
+            "iou": 0.49325620962358246,
+            "dice": 0.6606451142740222,
+            "support": 418035
+          }
+        ],
+        "support": 59885568
+      }
+    }
+  ],
+  "report_dir": "results\\reports\\test\\fcn32s_resnet50",
+  "crop_size": 400,
+  "max_examples": 6,
+  "metrics_summary_json": "results\\reports\\test\\fcn32s_resnet50\\metrics_summary.json"
+}

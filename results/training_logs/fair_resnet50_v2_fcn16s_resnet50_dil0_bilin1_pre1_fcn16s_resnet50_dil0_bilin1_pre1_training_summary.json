@@ -1,0 +1,8 @@
+{
+  "run_id": "fair_resnet50_v2_fcn16s_resnet50_dil0_bilin1_pre1_fcn16s_resnet50_dil0_bilin1_pre1",
+  "epochs_logged": 600,
+  "total_training_time_sec": 11526.185663999982,
+  "total_training_time_minutes": 192.10309439999972,
+  "csv": "results\\training_logs\\fair_resnet50_v2_fcn16s_resnet50_dil0_bilin1_pre1_fcn16s_resnet50_dil0_bilin1_pre1_training_log.csv",
+  "json": "results\\training_logs\\fair_resnet50_v2_fcn16s_resnet50_dil0_bilin1_pre1_fcn16s_resnet50_dil0_bilin1_pre1_training_log.json"
+}
