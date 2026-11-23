@@ -17,6 +17,7 @@ Status: **cabang eksperimen**. Tidak mengubah `main`, checkpoint historis, atau 
 Buka PowerShell dari root repository. Jika baru clone gunakan:
 
 ```powershell
+git config --global core.longpaths true
 git clone https://github.com/gedxxe/uav-weed-segmentation-mobilenetv3-unet.git
 cd uav-weed-segmentation-mobilenetv3-unet
 git fetch origin
