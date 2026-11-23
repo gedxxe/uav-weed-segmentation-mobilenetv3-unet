@@ -129,7 +129,13 @@ def main():
     )
 
     img_shape = load_image(path=str(test_complete_img_ls[0])).shape
-    means, stds = get_calculated_means_stds_trainval()
+    loaded_model = torch.load(model_save_path, map_location=device)
+    # New research checkpoints record trainval-only normalization. Older
+    # checkpoints retain the historical normalization fallback.
+    if isinstance(loaded_model, dict) and "mean" in loaded_model and "std" in loaded_model:
+        means, stds = loaded_model["mean"], loaded_model["std"]
+    else:
+        means, stds = get_calculated_means_stds_trainval()
 
     test_loader = get_test_loader(
         test_img_dir=test_imgs,
@@ -141,7 +147,6 @@ def main():
         pin_memory=pin_memory,
     )
 
-    loaded_model = torch.load(model_save_path, map_location=device)
     print(f"Loading: {architecture} {encoder_name} ...")
     print(f"Report model name: {model_name}")
     model = set_model(

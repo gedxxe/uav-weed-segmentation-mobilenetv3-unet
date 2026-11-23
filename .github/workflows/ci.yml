@@ -11,6 +11,10 @@ jobs:
     timeout-minutes: 45
 
     steps:
+      - name: Enable Git long paths (legacy tracked training artifacts)
+        shell: pwsh
+        run: git config --global core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -33,7 +37,7 @@ jobs:
       - name: Compile Python files
         shell: pwsh
         run: |
-          .\.venv\Scripts\python.exe -m py_compile train.py small_training.py predict_testset.py compare_model_predictions.py utils\parser.py utils\train.py utils\manual_unet_mobilenetv3.py scripts\check_comparison_status.py scripts\run_model_suite.py
+          .\.venv\Scripts\python.exe -m py_compile train.py small_training.py predict_testset.py compare_model_predictions.py utils\parser.py utils\train.py utils\manual_unet_mobilenetv3.py scripts\research_data.py scripts\research_train.py scripts\research_results.py scripts\research_efficiency.py scripts\run_model_suite.py
 
       - name: Run unit smoke tests
         shell: pwsh

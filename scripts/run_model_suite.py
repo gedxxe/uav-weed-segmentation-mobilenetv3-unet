@@ -225,6 +225,11 @@ def build_model_specs(args):
                     class_weights=args.proposed_class_weights,
                     class_weight_strategy=args.proposed_class_weight_strategy,
                     validation_loss=args.proposed_validation_loss,
+                    foreground_aux_weight=(
+                        args.foreground_aux_weight
+                        if architecture == PROPOSED_V2_ARCHITECTURE
+                        else 0.0
+                    ),
                 )
             )
 
