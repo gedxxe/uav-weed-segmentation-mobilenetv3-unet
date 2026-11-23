@@ -117,7 +117,8 @@ def seed_all(seed):
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = True
+        # Avoid autotuner-dependent algorithm selection during research runs.
+        torch.backends.cudnn.benchmark = False
 
 def get_loaders(train_img_dir, train_msk_dir, valid_img_dir ,valid_msk_dir, mean, std, batch_size, num_workers=4, pin_memory=True):
     train_transform = A.Compose(
