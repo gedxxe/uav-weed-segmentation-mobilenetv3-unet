@@ -115,6 +115,17 @@ Hasilnya: `results/research_runs/_comparison/test_models.csv` dan `test_per_imag
 
 `predict_testset.py` sekarang memprioritaskan `mean/std` dalam checkpoint riset, sehingga nilai statistik pada inference konsisten dengan final training. Untuk checkpoint lama tanpa metadata, fallback normalisasi lama dipertahankan.
 
+## Langkah 5b — benchmark efisiensi kedua model
+
+Gunakan GPU yang sama dan ukuran input 480x480 untuk baseline dan proposed.
+
+```powershell
+.\\.venv\\Scripts\\python.exe scripts\\research_efficiency.py --root . --run-id genze_r34_dice_s42 --input-size 480 --device cuda
+.\\.venv\\Scripts\\python.exe scripts\\research_efficiency.py --root . --run-id zuoli_mnv3_dice_s42 --input-size 480 --device cuda
+```
+
+Buka `results/research_runs/<run-id>/efficiency_480.json`. Angka GFLOPs bersifat perkiraan dengan metode penghitung milik repo. FPS/latency berasal dari satu GPU dan harus diuji berulang sesuai kebijakan yang sama.
+
 ## Langkah 6 — ablation setelah baseline dan proposed selesai
 
 Gunakan run ID terpisah untuk:
