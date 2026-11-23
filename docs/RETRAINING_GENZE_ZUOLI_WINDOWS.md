@@ -105,6 +105,14 @@ Proposed:
 
 Ulangi dua perintah dengan mengganti `test` menjadi `test_different_bbch` serta nama folder `.../test` menjadi `.../test_different_bbch`. Jangan retrain pada BBCH.
 
+Gabungkan laporan dari checkpoint final yang sudah dibekukan:
+
+```powershell
+.\\.venv\\Scripts\\python.exe scripts\\research_results.py --root . --runs genze_r34_dice_s42 zuoli_mnv3_dice_s42 --subset test
+```
+
+Hasilnya: `results/research_runs/_comparison/test_models.csv` dan `test_per_image.csv`. Kedua file ini berisi metrik aktual, **bukan angka hasil perkiraan**.
+
 `predict_testset.py` sekarang memprioritaskan `mean/std` dalam checkpoint riset, sehingga nilai statistik pada inference konsisten dengan final training. Untuk checkpoint lama tanpa metadata, fallback normalisasi lama dipertahankan.
 
 ## Langkah 6 — ablation setelah baseline dan proposed selesai
